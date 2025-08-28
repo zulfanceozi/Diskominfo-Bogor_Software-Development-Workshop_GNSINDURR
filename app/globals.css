@@ -31,3 +31,22 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Fix form input text color - keep background white, make text black */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+textarea,
+select {
+  color: #000000 !important;
+}
+
+/* Ensure form inputs are visible in all themes */
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="password"]::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+}

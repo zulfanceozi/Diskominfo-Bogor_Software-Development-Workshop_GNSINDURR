@@ -38,6 +38,7 @@ export default function AdminLogin() {
       if (formData.username === "admin" && formData.password === "admin123") {
         // Set session (in production use proper session management)
         localStorage.setItem("adminLoggedIn", "true");
+        console.log("Login successful, localStorage set"); // Debug log
         router.push("/admin");
       } else {
         setErrors({ submit: "Username atau password salah" });
@@ -71,7 +72,7 @@ export default function AdminLogin() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
               placeholder="Masukkan username"
             />
           </div>
@@ -89,7 +90,7 @@ export default function AdminLogin() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
               placeholder="Masukkan password"
             />
           </div>

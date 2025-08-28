@@ -25,13 +25,20 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check if admin is logged in
-    const isLoggedIn = localStorage.getItem("adminLoggedIn");
-    if (!isLoggedIn) {
-      router.push("/admin/login");
-      return;
-    }
+    const checkAuth = () => {
+      const isLoggedIn = localStorage.getItem("adminLoggedIn");
+      console.log("Auth check - isLoggedIn:", isLoggedIn); // Debug log
+      if (!isLoggedIn) {
+        console.log("Not logged in, redirecting to login"); // Debug log
+        router.push("/admin/login");
+        return;
+      }
+      console.log("Logged in, fetching submissions"); // Debug log
+      fetchSubmissions();
+    };
 
-    fetchSubmissions();
+    // Add a small delay to ensure localStorage is available
+    setTimeout(checkAuth, 100);
   }, [router]);
 
   const fetchSubmissions = async () => {
