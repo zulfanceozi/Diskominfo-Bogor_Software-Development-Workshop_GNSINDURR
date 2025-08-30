@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "init-db": "node scripts/init-db.js",
-    "setup-db": "node scripts/setup-local-db.js"
+    "setup-db": "node scripts/setup-local-db.js",
+    "test-twilio": "node scripts/test-twilio.js"
   },
   "dependencies": {
     "antd": "^5.12.8",
