@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { Submission, NotificationLog, initializeDatabase } from "../../../../../lib/sequelize";
-import { sendStatusUpdateNotification } from "../../../../../lib/notify/twilio";
-import { sendStatusUpdateEmail } from "../../../../../lib/notify/email";
+import { Submission, NotificationLog, initializeDatabase } from "@/lib/sequelize";
+import { sendStatusUpdateNotification } from "@/lib/notify/twilio";
+import { sendStatusUpdateEmail } from "@/lib/notify/email";
 
 // Initialize database on first request
 let dbInitialized = false;

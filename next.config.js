@@ -30,6 +30,13 @@ const nextConfig = {
         "pg-hstore": false,
       };
     }
+    
+    // Add alias for path resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname),
+    };
+    
     return config;
   },
   experimental: {
