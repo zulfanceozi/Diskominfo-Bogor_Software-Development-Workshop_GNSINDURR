@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Submission, initializeDatabase } from "../../../../lib/sequelize";
+import { Submission, initializeDatabase } from "@/lib/sequelize";
 
 // Initialize database on first request
 let dbInitialized = false;
