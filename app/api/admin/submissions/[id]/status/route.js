@@ -71,8 +71,14 @@ export async function PATCH(request, { params }) {
     );
 
     // Send email notification if email exists
+    console.log('📧 Checking email notification for submission:', submission.id);
+    console.log('📧 Submission email:', submission.email);
+    
     if (submission.email) {
+      console.log('📧 Sending email notification to:', submission.email);
       const emailResult = await sendStatusUpdateEmail(submission, status);
+      console.log('📧 Email result:', emailResult);
+      
       notificationPromises.push(
         NotificationLog.create({
           submission_id: submission.id,
@@ -85,6 +91,8 @@ export async function PATCH(request, { params }) {
           },
         })
       );
+    } else {
+      console.log('📧 No email address found for submission:', submission.id);
     }
 
     // Wait for all notification logs to be created
