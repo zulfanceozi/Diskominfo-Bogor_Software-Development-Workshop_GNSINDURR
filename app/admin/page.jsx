@@ -20,6 +20,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [chartData, setChartData] = useState([]);
+  const [updatingStatus, setUpdatingStatus] = useState({}); // Track which submission is being updated
+  const [refreshing, setRefreshing] = useState(false); // Track refresh loading state
 
   const COLORS = ["#ffc107", "#1890ff", "#52c41a", "#ff4d4f"];
 
@@ -41,7 +43,11 @@ export default function AdminDashboard() {
     setTimeout(checkAuth, 100);
   }, [router]);
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = async (showLoading = false) => {
+    if (showLoading) {
+      setRefreshing(true);
+    }
+    
     try {
       const response = await fetch("/api/admin/submissions");
       const data = await response.json();
@@ -49,6 +55,9 @@ export default function AdminDashboard() {
       if (response.ok) {
         setSubmissions(data);
         updateChartData(data);
+        if (showLoading) {
+          message.success("Data berhasil diperbarui");
+        }
       } else {
         message.error("Gagal memuat data pengajuan");
       }
@@ -56,6 +65,9 @@ export default function AdminDashboard() {
       message.error("Terjadi kesalahan jaringan");
     } finally {
       setLoading(false);
+      if (showLoading) {
+        setRefreshing(false);
+      }
     }
   };
 
@@ -90,6 +102,9 @@ export default function AdminDashboard() {
   };
 
   const handleStatusChange = async (submissionId, newStatus) => {
+    // Set loading state for this specific submission
+    setUpdatingStatus(prev => ({ ...prev, [submissionId]: true }));
+    
     try {
       const response = await fetch(
         `/api/admin/submissions/${submissionId}/status`,
@@ -111,6 +126,9 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       message.error("Terjadi kesalahan jaringan");
+    } finally {
+      // Clear loading state for this submission
+      setUpdatingStatus(prev => ({ ...prev, [submissionId]: false }));
     }
   };
 
@@ -141,16 +159,29 @@ export default function AdminDashboard() {
       dataIndex: "status",
       key: "status",
       render: (status, record) => (
-        <Select
-          value={status}
-          style={{ width: 150 }}
-          onChange={(value) => handleStatusChange(record.id, value)}
-        >
-          <Option value="PENGAJUAN_BARU">Pengajuan Baru</Option>
-          <Option value="DIPROSES">Sedang Diproses</Option>
-          <Option value="SELESAI">Selesai</Option>
-          <Option value="DITOLAK">Ditolak</Option>
-        </Select>
+        <div className="flex items-center space-x-2">
+          <Select
+            value={status}
+            style={{ width: 150 }}
+            onChange={(value) => handleStatusChange(record.id, value)}
+            disabled={updatingStatus[record.id]}
+            loading={updatingStatus[record.id]}
+          >
+            <Option value="PENGAJUAN_BARU">Pengajuan Baru</Option>
+            <Option value="DIPROSES">Sedang Diproses</Option>
+            <Option value="SELESAI">Selesai</Option>
+            <Option value="DITOLAK">Ditolak</Option>
+          </Select>
+          {updatingStatus[record.id] && (
+            <div className="flex items-center text-blue-600 text-sm">
+              <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Updating...
+            </div>
+          )}
+        </div>
       ),
     },
     {
@@ -182,10 +213,21 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={fetchSubmissions}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                onClick={() => fetchSubmissions(true)}
+                disabled={refreshing}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg flex items-center"
               >
-                Refresh
+                {refreshing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Refreshing...
+                  </>
+                ) : (
+                  "Refresh"
+                )}
               </button>
               <button
                 onClick={handleLogout}
@@ -283,6 +325,7 @@ export default function AdminDashboard() {
               onChange={setStatusFilter}
               style={{ width: 200 }}
               placeholder="Filter by status"
+              disabled={Object.values(updatingStatus).some(Boolean)}
             >
               <Option value="ALL">Semua Status</Option>
               <Option value="PENGAJUAN_BARU">Pengajuan Baru</Option>
@@ -292,19 +335,34 @@ export default function AdminDashboard() {
             </Select>
           </div>
 
-          <Table
-            columns={columns}
-            dataSource={filteredSubmissions}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} dari ${total} pengajuan`,
-            }}
-          />
+          <div className="relative">
+            <Table
+              columns={columns}
+              dataSource={filteredSubmissions}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} dari ${total} pengajuan`,
+              }}
+            />
+            
+            {/* Loading overlay when any status is being updated */}
+            {Object.values(updatingStatus).some(Boolean) && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                <div className="text-center">
+                  <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p className="text-blue-600 font-medium">Memperbarui status...</p>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
       </div>
     </div>
