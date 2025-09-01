@@ -1,5 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable static optimization
+  output: 'standalone',
+  
+  // Optimize for production
+  swcMinify: true,
+  
+  // Enable compression
+  compress: true,
+  
+  // Optimize images
+  images: {
+    domains: [],
+    unoptimized: false,
+  },
+  
   async headers() {
     return [
       {
@@ -11,9 +26,44 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+        ],
+      },
     ];
   },
-  webpack: (config, { isServer }) => {
+  
+  webpack: (config, { isServer, dev }) => {
+    // Production optimizations
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+          },
+        },
+      };
+    }
+    
     if (isServer) {
       // Fix for Sequelize and pg package
       config.externals = config.externals || [];
@@ -39,9 +89,14 @@ const nextConfig = {
     
     return config;
   },
+  
   experimental: {
     serverComponentsExternalPackages: ["pg", "pg-hstore", "sequelize"],
+    optimizeCss: true,
   },
+  
+  // Ensure Tailwind CSS is processed correctly
+  transpilePackages: ['tailwindcss'],
 };
 
 module.exports = nextConfig;
