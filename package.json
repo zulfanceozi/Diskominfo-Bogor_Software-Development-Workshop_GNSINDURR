@@ -10,6 +10,7 @@
     "postbuild": "next-sitemap",
     "postinstall": "npm rebuild pg pg-hstore",
     "vercel-build": "npm run build",
+    "fix-db": "node scripts/fix-database-schema.js",
     "init-db": "node scripts/init-db.js",
     "setup-db": "node scripts/setup-local-db.js",
     "test-twilio": "node scripts/test-twilio.js",
