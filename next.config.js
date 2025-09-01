@@ -45,19 +45,45 @@ const nextConfig = {
   
   webpack: (config, { isServer, dev }) => {
     if (isServer) {
-      // Remove pg from externals to include it in the bundle
+      console.log('🔧 Configuring webpack for server-side...');
+      
+      // Force include pg and related packages
       config.externals = config.externals || [];
       
-      // Only exclude non-essential packages
+      // Only exclude sequelize, force include everything else
       config.externals.push({
         sequelize: "commonjs sequelize",
       });
 
-      // Remove pg fallback to include it properly
+      // Explicitly include pg packages
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        // Remove pg: false to include it
+        // Force include these packages
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
       };
+
+      // Ensure pg is not externalized
+      if (config.externals) {
+        config.externals = config.externals.filter(external => {
+          if (typeof external === 'object') {
+            return !external.pg && !external['pg-hstore'];
+          }
+          return external !== 'pg' && external !== 'pg-hstore';
+        });
+      }
+
+      console.log('✅ Webpack configured for pg inclusion');
     }
     
     // Add alias for path resolution
@@ -70,6 +96,7 @@ const nextConfig = {
   },
   
   experimental: {
+    // Only exclude sequelize, include everything else
     serverComponentsExternalPackages: ["sequelize"],
   },
   
