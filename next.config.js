@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static optimization
-  output: 'standalone',
-  
   // Optimize for production
   swcMinify: true,
   
@@ -12,7 +9,7 @@ const nextConfig = {
   // Optimize images
   images: {
     domains: [],
-    unoptimized: false,
+    unoptimized: true,
   },
   
   async headers() {
@@ -47,23 +44,6 @@ const nextConfig = {
   },
   
   webpack: (config, { isServer, dev }) => {
-    // Production optimizations
-    if (!dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-            },
-          },
-        },
-      };
-    }
-    
     if (isServer) {
       // Fix for Sequelize and pg package
       config.externals = config.externals || [];
@@ -92,11 +72,18 @@ const nextConfig = {
   
   experimental: {
     serverComponentsExternalPackages: ["pg", "pg-hstore", "sequelize"],
-    optimizeCss: true,
   },
   
   // Ensure Tailwind CSS is processed correctly
   transpilePackages: ['tailwindcss'],
+  
+  // Disable static optimization for dynamic content
+  trailingSlash: false,
+  
+  // Ensure proper handling of dynamic routes
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
 };
 
 module.exports = nextConfig;
