@@ -102,7 +102,6 @@ export async function POST(request) {
     );
   }
 }
-
 /**
  * Generate unique tracking code
  * Format: LP-YYYYMMDD-XXXXX (e.g., LP-20241201-12345)
@@ -120,3 +119,4 @@ function generateTrackingCode() {
 
   return `LP-${dateStr}-${randomNum}`;
 }
+

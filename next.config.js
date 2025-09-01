@@ -45,19 +45,18 @@ const nextConfig = {
   
   webpack: (config, { isServer, dev }) => {
     if (isServer) {
-      // Fix for Sequelize and pg package
+      // Remove pg from externals to include it in the bundle
       config.externals = config.externals || [];
+      
+      // Only exclude non-essential packages
       config.externals.push({
-        pg: "commonjs pg",
-        "pg-hstore": "commonjs pg-hstore",
         sequelize: "commonjs sequelize",
       });
 
-      // Add fallback for pg
+      // Remove pg fallback to include it properly
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        pg: false,
-        "pg-hstore": false,
+        // Remove pg: false to include it
       };
     }
     
@@ -71,7 +70,7 @@ const nextConfig = {
   },
   
   experimental: {
-    serverComponentsExternalPackages: ["pg", "pg-hstore", "sequelize"],
+    serverComponentsExternalPackages: ["sequelize"],
   },
   
   // Ensure Tailwind CSS is processed correctly
