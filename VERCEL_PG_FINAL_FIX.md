@@ -62,7 +62,7 @@ webpack: (config, { isServer, dev }) => {
 
 ### **2. Updated Vercel Configuration**
 
-**File**: `vercel.json`
+**File**: `vercel.json` ✅ **FIXED**
 ```json
 {
   "version": 2,
@@ -77,13 +77,13 @@ webpack: (config, { isServer, dev }) => {
       }
     }
   ],
-  "functions": {
-    "app/api/**/*.js": {
-      "maxDuration": 30
-    }
+  "env": {
+    "NODE_ENV": "production"
   }
 }
 ```
+
+**Note**: Removed `functions` property to avoid conflict with `builds` property.
 
 ### **3. Updated NPM Configuration**
 
@@ -137,7 +137,7 @@ git push origin main
 - [ ] `pg` package in `package.json` dependencies
 - [ ] `pg-hstore` package in `package.json` dependencies
 - [ ] Next.js webpack config excludes `pg` from externals
-- [ ] Vercel config properly set
+- [ ] Vercel config properly set (no conflicts)
 - [ ] API routes use single default export
 
 ### **After Deployment**
