@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { message } from "antd";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -31,22 +32,39 @@ export default function AdminLogin() {
       return;
     }
 
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
     setIsSubmitting(true);
+    setErrors({}); // Clear previous errors
 
     try {
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Simple authentication for workshop - in production use proper auth
       if (formData.username === "admin" && formData.password === "admin123") {
         // Set session (in production use proper session management)
         localStorage.setItem("adminLoggedIn", "true");
         console.log("Login successful, localStorage set"); // Debug log
-        router.push("/admin");
+        
+        // Show success message
+        message.success("Login berhasil! Mengalihkan ke dashboard...");
+        
+        // Small delay to show the success message
+        setTimeout(() => {
+          router.push("/admin");
+        }, 1000);
       } else {
         setErrors({ submit: "Username atau password salah" });
+        setIsSubmitting(false); // Reset loading state on error
       }
     } catch (error) {
+      console.error("Login error:", error);
       setErrors({ submit: "Terjadi kesalahan" });
-    } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Reset loading state on error
     }
   };
 
@@ -54,11 +72,16 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Login</h1>
-          <p className="text-gray-600">Masuk ke panel administrasi</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Admin Login
+          </h1>
+          <p className="text-gray-600">
+            Masuk ke panel administrasi
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          
           <div>
             <label
               htmlFor="username"
@@ -72,7 +95,7 @@ export default function AdminLogin() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black transition duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Masukkan username"
             />
           </div>
@@ -90,7 +113,7 @@ export default function AdminLogin() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black transition duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Masukkan password"
             />
           </div>
@@ -104,9 +127,23 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+            className={`w-full font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center ${
+              isSubmitting 
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white`}
           >
-            {isSubmitting ? "Memproses..." : "Login"}
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 

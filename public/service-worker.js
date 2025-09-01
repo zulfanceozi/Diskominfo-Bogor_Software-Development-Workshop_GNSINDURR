@@ -1,4 +1,7 @@
-const CACHE_NAME = "layanan-publik-v1";
+const CACHE_NAME = "layanan-publik-v2"; // Increment version
+const STATIC_CACHE = "static-v2";
+const DYNAMIC_CACHE = "dynamic-v2";
+
 const urlsToCache = [
   "/",
   "/public",
@@ -8,24 +11,75 @@ const urlsToCache = [
   "/icon-512.png",
 ];
 
-// Install event - cache resources
+// Install event - cache static resources
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("Opened cache");
+    caches.open(STATIC_CACHE).then((cache) => {
+      console.log("Opened static cache");
       return cache.addAll(urlsToCache);
     })
   );
 });
 
-// Fetch event - serve from cache if available
+// Fetch event - smart caching strategy
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Return cached version or fetch from network
-      return response || fetch(event.request);
-    })
-  );
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // Skip external requests
+  if (url.origin !== location.origin) {
+    return;
+  }
+
+  // Handle different types of requests
+  if (request.destination === 'document' || request.destination === '') {
+    // For HTML pages, try network first, fallback to cache
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Clone the response before caching
+          const responseClone = response.clone();
+          caches.open(DYNAMIC_CACHE).then(cache => {
+            cache.put(request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request);
+        })
+    );
+  } else if (request.destination === 'style' || request.destination === 'script') {
+    // For CSS and JS, try cache first, fallback to network
+    event.respondWith(
+      caches.match(request)
+        .then(response => {
+          return response || fetch(request).then(fetchResponse => {
+            // Cache the new response
+            const responseClone = fetchResponse.clone();
+            caches.open(DYNAMIC_CACHE).then(cache => {
+              cache.put(request, responseClone);
+            });
+            return fetchResponse;
+          });
+        })
+    );
+  } else {
+    // For other resources, try network first, fallback to cache
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request);
+        })
+    );
+  }
 });
 
 // Activate event - clean up old caches
@@ -34,12 +88,15 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
             console.log("Deleting old cache:", cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      // Claim all clients to ensure the new service worker takes control
+      return self.clients.claim();
     })
   );
 });

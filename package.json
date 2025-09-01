@@ -9,7 +9,11 @@
     "lint": "next lint",
     "init-db": "node scripts/init-db.js",
     "setup-db": "node scripts/setup-local-db.js",
-    "test-twilio": "node scripts/test-twilio.js"
+    "test-twilio": "node scripts/test-twilio.js",
+    "test-email": "node scripts/test-email.js",
+    "verify-resend": "node scripts/verify-api-key.js",
+    "check-submissions": "node scripts/check-submissions.js",
+    "check-notifications": "node scripts/check-notifications.js"
   },
   "dependencies": {
     "antd": "^5.12.8",
