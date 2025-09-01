@@ -130,6 +130,17 @@ Buka [http://localhost:3000](http://localhost:3000) di browser.
    - Ubah status via dropdown
    - Verifikasi notifikasi terkirim
 
+### Available Scripts
+
+```bash
+# Database initialization
+npm run init-db
+
+# Test notifications
+npm run test-twilio    # Test WhatsApp via Twilio
+npm run test-email     # Test email via Resend
+```
+
 ## 🚀 Deployment ke Vercel
 
 ### 1. Push ke GitHub
@@ -155,9 +166,89 @@ git push origin main
    - `EMAIL_FROM`
 5. Klik "Deploy"
 
-### 3. Update APP_BASE_URL
+### 3. Build Settings
+
+- **Framework Preset**: Next.js
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Install Command**: `npm install`
+
+### 4. Update APP_BASE_URL
 
 Setelah deploy, update `APP_BASE_URL` di Vercel environment variables dengan URL production.
+
+## 📁 Project Structure
+
+```
+├── app/                    # Next.js App Router
+│   ├── layout.jsx         # Root layout with PWA setup
+│   ├── page.jsx           # Home page
+│   ├── globals.css        # Global styles with Tailwind
+│   ├── admin/             # Admin dashboard
+│   │   ├── page.jsx       # Admin dashboard with charts
+│   │   └── login/
+│   │       └── page.jsx   # Admin login page
+│   ├── public/            # Public services
+│   │   ├── page.jsx       # Public submission form
+│   │   ├── success/
+│   │   │   └── page.jsx   # Success page after submission
+│   │   └── components/
+│   │       ├── NewSubmission.jsx # Submission form component
+│   │       └── StatusCheck.jsx   # Status check component
+│   └── api/               # API routes
+│       ├── admin/
+│       │   └── submissions/
+│       │       ├── route.js      # GET all submissions
+│       │       └── [id]/
+│       │           └── status/
+│       │               └── route.js # PATCH update status
+│       └── submissions/
+│           ├── route.js          # POST new submission
+│           └── [tracking_code]/
+│               └── route.js      # GET submission by tracking code
+├── lib/                   # Utilities
+│   ├── sequelize.js       # Database setup
+│   ├── phone.js           # Phone utilities
+│   ├── notify/
+│   │   ├── email.js       # Email notification service
+│   │   └── twilio.js      # WhatsApp notification service
+│   ├── pg-wrapper.js      # PostgreSQL wrapper
+│   └── vercel-db.js       # Vercel database utilities
+├── public/                # Static files
+│   ├── manifest.json      # PWA manifest
+│   ├── service-worker.js  # Service worker
+│   ├── icon-192.png       # PWA icon 192x192
+│   └── icon-512.png       # PWA icon 512x512
+├── scripts/               # Essential scripts only
+│   ├── init-db.js         # Database initialization
+│   ├── test-twilio.js     # Test Twilio functionality
+│   └── test-email.js      # Test email functionality
+└── styles/                # CSS files
+```
+
+## 🔧 Key Files & Features
+
+### Frontend Pages
+
+- **`app/page.jsx`**: Home page with navigation
+- **`app/admin/page.jsx`**: Admin dashboard with charts and table
+- **`app/admin/login/page.jsx`**: Admin login form
+- **`app/public/page.jsx`**: Public submission form
+- **`app/public/success/page.jsx`**: Success page
+
+### API Routes
+
+- **`app/api/submissions/route.js`**: Create new submission
+- **`app/api/submissions/[tracking_code]/route.js`**: Get submission by tracking code
+- **`app/api/admin/submissions/route.js`**: Get all submissions for admin
+- **`app/api/admin/submissions/[id]/status/route.js`**: Update submission status
+
+### Configuration Files
+
+- **`next.config.js`**: Next.js configuration with Tailwind CSS transpilation
+- **`tailwind.config.js`**: Tailwind CSS configuration
+- **`postcss.config.js`**: PostCSS configuration
+- **`vercel.json`**: Vercel deployment configuration
 
 ## 📱 PWA Features
 
@@ -173,7 +264,33 @@ Setelah deploy, update `APP_BASE_URL` di Vercel environment variables dengan URL
 - Form pengajuan dapat diisi offline
 - Data akan sync saat online kembali
 
-## 🔧 Troubleshooting
+### PWA Components
+
+- **Service Worker**: Offline functionality and caching
+- **Manifest**: App-like experience with icons
+- **Icons**: 192x192 and 512x512 for mobile devices
+
+## 🎯 Admin Dashboard Features
+
+- ✅ Real-time stats cards with loading states
+- ✅ Interactive pie chart for status distribution
+- ✅ Data table with pagination and status updates
+- ✅ Comprehensive loading states throughout
+- ✅ Error handling with user feedback
+- ✅ Simple localStorage-based authentication
+- ✅ Responsive design with Ant Design components
+
+## 🔄 Deployment Status
+
+- ✅ Vercel deployment working
+- ✅ All pages accessible
+- ✅ API routes functional
+- ✅ Database connected
+- ✅ PWA features enabled
+- ✅ Email notifications working
+- ✅ WhatsApp notifications working
+
+## 🔍 Troubleshooting
 
 ### Database Connection Error
 
@@ -209,23 +326,37 @@ npm run dev
 - Gunakan domain yang sudah diverifikasi
 - Cek API key
 
-## 📁 Project Structure
+### Vercel Build Issues
 
-```
-├── app/                    # Next.js App Router
-│   ├── (landing)/         # Landing page
-│   ├── public/            # Public services
-│   ├── admin/             # Admin dashboard
-│   └── api/               # API routes
-├── lib/                   # Utilities
-│   ├── sequelize.js       # Database setup
-│   ├── phone.js           # Phone utilities
-│   └── notify/            # Notification services
-├── public/                # Static files
-│   ├── manifest.json      # PWA manifest
-│   └── service-worker.js  # Service worker
-└── styles/                # CSS files
-```
+**Error**: "Cannot find module 'tailwindcss'"
+
+**Solusi**:
+
+- Pastikan `tailwindcss`, `autoprefixer`, `postcss` ada di `dependencies`
+- Clear Vercel cache jika diperlukan
+- Cek build logs untuk error spesifik
+
+## 🚨 Important Notes
+
+1. **Database**: Gunakan Render PostgreSQL (bukan SQLite) untuk production
+2. **Environment**: Set `NODE_ENV=production` di Vercel
+3. **Build**: Pastikan semua dependencies ada di `dependencies`
+4. **Cache**: Clear Vercel cache jika diperlukan
+5. **Scripts**: Hanya gunakan script yang tersedia: `init-db`, `test-twilio`, `test-email`
+
+## 🎯 Success Checklist
+
+- [ ] Code pushed ke GitHub
+- [ ] Repository connected ke Vercel
+- [ ] Environment variables set
+- [ ] Build successful
+- [ ] App accessible via Vercel URL
+- [ ] PWA features working
+- [ ] Database connection working
+- [ ] Email notifications working
+- [ ] WhatsApp notifications working
+- [ ] Admin dashboard functional
+- [ ] Public forms working
 
 ## 🤝 Contributing
 
@@ -249,4 +380,4 @@ Untuk pertanyaan atau bantuan:
 
 ---
 
-**Workshop-Friendly System** - Dibuat untuk memudahkan pembelajaran dan workshop development.
+**Workshop-Friendly System** - Dibuat untuk memudahkan pembelajaran dan workshop development dengan struktur yang bersih dan dokumentasi yang lengkap.

@@ -12,8 +12,8 @@ export const metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#0ea5e9",
 };
 
@@ -22,10 +22,14 @@ export default function RootLayout({ children }) {
     <html lang="id">
       <head>
         <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Layanan Publik" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="msapplication-TileColor" content="#0ea5e9" />
+        <meta name="msapplication-TileImage" content="/icon-192.png" />
+        <meta name="theme-color" content="#0ea5e9" />
       </head>
       <body className={inter.className}>
         {children}
@@ -34,9 +38,11 @@ export default function RootLayout({ children }) {
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/service-worker.js')
+                  navigator.serviceWorker.register('/service-worker.js', {
+                    scope: '/'
+                  })
                     .then(function(registration) {
-                      console.log('SW registered: ', registration);
+                      console.log('SW registered successfully: ', registration);
                       
                       // Check for updates
                       registration.addEventListener('updatefound', () => {
@@ -56,6 +62,24 @@ export default function RootLayout({ children }) {
                     });
                 });
               }
+              
+              // PWA Install Prompt
+              let deferredPrompt;
+              window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('PWA install prompt ready');
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install button if needed
+                if (window.showInstallPrompt) {
+                  window.showInstallPrompt();
+                }
+              });
+              
+              window.addEventListener('appinstalled', () => {
+                console.log('PWA was installed');
+                deferredPrompt = null;
+              });
             `,
           }}
         />

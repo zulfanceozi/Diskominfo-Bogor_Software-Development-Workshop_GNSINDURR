@@ -10,16 +10,9 @@
     "postbuild": "next-sitemap",
     "postinstall": "npm rebuild pg pg-hstore",
     "vercel-build": "npm run build",
-    "fix-db": "node scripts/fix-database-schema.js",
-    "check-db": "node scripts/check-database-schema.js",
-    "create-columns": "node scripts/create-missing-columns.js",
     "init-db": "node scripts/init-db.js",
-    "setup-db": "node scripts/setup-local-db.js",
     "test-twilio": "node scripts/test-twilio.js",
-    "test-email": "node scripts/test-email.js",
-    "verify-resend": "node scripts/verify-api-key.js",
-    "check-submissions": "node scripts/check-submissions.js",
-    "check-notifications": "node scripts/check-notifications.js"
+    "test-email": "node scripts/test-email.js"
   },
   "dependencies": {
     "antd": "^5.12.8",

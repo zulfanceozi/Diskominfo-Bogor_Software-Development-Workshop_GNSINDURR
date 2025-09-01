@@ -1,23 +1,53 @@
-const CACHE_NAME = "layanan-publik-v2"; // Increment version
-const STATIC_CACHE = "static-v2";
-const DYNAMIC_CACHE = "dynamic-v2";
+// Service Worker untuk PWA Workshop
+// Handle PWA features dan minimal caching
 
-const urlsToCache = [
-  "/",
-  "/public",
-  "/admin",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
-];
+const CACHE_NAME = "layanan-publik-v1";
+const STATIC_CACHE = "static-v1";
+const DYNAMIC_CACHE = "dynamic-v1";
 
-// Install event - cache static resources
+// Install event - cache essential files
 self.addEventListener("install", (event) => {
+  console.log("Service Worker installed - PWA mode");
+
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log("Opened static cache");
-      return cache.addAll(urlsToCache);
-    })
+    caches
+      .open(STATIC_CACHE)
+      .then((cache) => {
+        return cache.addAll([
+          "/",
+          "/manifest.json",
+          "/icon-192.png",
+          "/icon-512.png",
+        ]);
+      })
+      .then(() => {
+        // Skip waiting to activate immediately
+        self.skipWaiting();
+      })
+  );
+});
+
+// Activate event - clean up old caches
+self.addEventListener("activate", (event) => {
+  console.log("Service Worker activated - PWA mode");
+
+  event.waitUntil(
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+              console.log("Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(() => {
+        // Claim all clients immediately
+        return self.clients.claim();
+      })
   );
 });
 
@@ -27,7 +57,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   // Skip non-GET requests
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return;
   }
 
@@ -36,85 +66,65 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Handle different types of requests
-  if (request.destination === 'document' || request.destination === '') {
-    // For HTML pages, try network first, fallback to cache
+  // IMPORTANT: NEVER cache API requests
+  if (url.pathname.startsWith("/api/")) {
+    // Let the request go through normally, no caching
+    return;
+  }
+
+  // For HTML pages, try network first, fallback to cache
+  if (request.destination === "document") {
     event.respondWith(
       fetch(request)
-        .then(response => {
-          // Clone the response before caching
+        .then((response) => {
+          // Cache the response for offline use
           const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then(cache => {
+          caches.open(DYNAMIC_CACHE).then((cache) => {
             cache.put(request, responseClone);
           });
           return response;
         })
         .catch(() => {
+          // Fallback to cache if network fails
           return caches.match(request);
         })
     );
-  } else if (request.destination === 'style' || request.destination === 'script') {
-    // For CSS and JS, try cache first, fallback to network
+    return;
+  }
+
+  // For static assets, cache first, fallback to network
+  if (
+    request.destination === "style" ||
+    request.destination === "script" ||
+    request.destination === "image"
+  ) {
     event.respondWith(
-      caches.match(request)
-        .then(response => {
-          return response || fetch(request).then(fetchResponse => {
-            // Cache the new response
+      caches.match(request).then((response) => {
+        return (
+          response ||
+          fetch(request).then((fetchResponse) => {
+            // Cache the response
             const responseClone = fetchResponse.clone();
-            caches.open(DYNAMIC_CACHE).then(cache => {
+            caches.open(STATIC_CACHE).then((cache) => {
               cache.put(request, responseClone);
             });
             return fetchResponse;
-          });
-        })
+          })
+        );
+      })
     );
-  } else {
-    // For other resources, try network first, fallback to cache
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request);
-        })
-    );
+    return;
   }
-});
 
-// Activate event - clean up old caches
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-            console.log("Deleting old cache:", cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      // Claim all clients to ensure the new service worker takes control
-      return self.clients.claim();
+  // For other resources, try cache first
+  event.respondWith(
+    caches.match(request).then((response) => {
+      return response || fetch(request);
     })
   );
 });
 
-// Background sync for offline functionality
-self.addEventListener("sync", (event) => {
-  if (event.tag === "background-sync") {
-    event.waitUntil(doBackgroundSync());
-  }
-});
-
-function doBackgroundSync() {
-  // Handle background sync tasks
-  console.log("Background sync triggered");
-  return Promise.resolve();
-}
-
-// Push notification handling
+// Push notification handling (keep for PWA features)
 self.addEventListener("push", (event) => {
   const options = {
     body: event.data ? event.data.text() : "Update status pengajuan Anda",
@@ -150,5 +160,12 @@ self.addEventListener("notificationclick", (event) => {
 
   if (event.action === "explore") {
     event.waitUntil(clients.openWindow("/public?tab=status"));
+  }
+});
+
+// Message handling for simple operations
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
   }
 });

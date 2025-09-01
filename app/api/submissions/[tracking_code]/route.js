@@ -61,7 +61,8 @@ export async function GET(request, { params }) {
       nama: submission.nama,
       jenis_layanan: submission.jenis_layanan,
       status: submission.status,
-      // createdAt and updatedAt removed since timestamps are disabled
+      created_at: submission.created_at,
+      updated_at: submission.updated_at,
     };
 
     return NextResponse.json(submissionData);

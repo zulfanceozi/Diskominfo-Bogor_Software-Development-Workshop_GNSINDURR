@@ -10,6 +10,11 @@
   "scope": "/",
   "lang": "id",
   "categories": ["government", "utilities"],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "icons": [
     {
       "src": "/icon-192.png",
