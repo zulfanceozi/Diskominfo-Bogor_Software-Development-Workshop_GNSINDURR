@@ -1,5 +1,14 @@
 const { Sequelize } = require("sequelize");
 
+// Check if DATABASE_URL is available
+if (!process.env.DATABASE_URL) {
+  console.log("❌ DATABASE_URL not found in environment variables");
+  console.log(
+    "💡 Please set DATABASE_URL or run this script in Vercel environment"
+  );
+  process.exit(1);
+}
+
 // Database connection
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "postgres",
