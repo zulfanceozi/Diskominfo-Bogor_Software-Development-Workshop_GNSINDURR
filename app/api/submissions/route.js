@@ -14,11 +14,36 @@ const initDB = async () => {
   }
 };
 
+// Handle CORS preflight
+export async function OPTIONS(request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
+// Handle GET (not allowed for this endpoint)
+export async function GET(request) {
+  return NextResponse.json(
+    { message: "Method not allowed. Use POST to create submission." },
+    { status: 405 }
+  );
+}
+
+// Handle POST - Create new submission
 export async function POST(request) {
   try {
+    console.log("POST request received at /api/submissions");
+    
     await initDB();
 
     const body = await request.json();
+    console.log("Request body:", body);
+    
     const { nama, nik, email, no_wa, jenis_layanan, consent } = body;
 
     // Validation
@@ -54,6 +79,7 @@ export async function POST(request) {
     }
 
     if (errors.length > 0) {
+      console.log("Validation errors:", errors);
       return NextResponse.json(
         { message: "Validasi gagal", errors },
         { status: 400 }
@@ -66,6 +92,8 @@ export async function POST(request) {
     // Normalize phone number
     const normalizedPhone = normalizePhoneNumber(no_wa);
 
+    console.log("Creating submission with tracking code:", trackingCode);
+
     // Create submission
     const submission = await Submission.create({
       tracking_code: trackingCode,
@@ -76,6 +104,8 @@ export async function POST(request) {
       jenis_layanan: jenis_layanan.trim(),
       status: "PENGAJUAN_BARU",
     });
+
+    console.log("Submission created successfully:", submission.id);
 
     return NextResponse.json(
       {
@@ -97,11 +127,39 @@ export async function POST(request) {
     }
 
     return NextResponse.json(
-      { message: "Terjadi kesalahan internal server" },
+      { 
+        message: "Terjadi kesalahan internal server",
+        error: error.message 
+      },
       { status: 500 }
     );
   }
 }
+
+// Handle PUT (not allowed for this endpoint)
+export async function PUT(request) {
+  return NextResponse.json(
+    { message: "Method not allowed" },
+    { status: 405 }
+  );
+}
+
+// Handle PATCH (not allowed for this endpoint)
+export async function PATCH(request) {
+  return NextResponse.json(
+    { message: "Method not allowed" },
+    { status: 405 }
+  );
+}
+
+// Handle DELETE (not allowed for this endpoint)
+export async function DELETE(request) {
+  return NextResponse.json(
+    { message: "Method not allowed" },
+    { status: 405 }
+  );
+}
+
 /**
  * Generate unique tracking code
  * Format: LP-YYYYMMDD-XXXXX (e.g., LP-20241201-12345)

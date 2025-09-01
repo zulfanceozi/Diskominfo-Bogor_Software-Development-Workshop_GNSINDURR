@@ -12,13 +12,54 @@ const initDB = async () => {
   }
 };
 
+// Handle CORS preflight
+export async function OPTIONS(request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
+// Handle GET (not allowed for this endpoint)
+export async function GET(request) {
+  return NextResponse.json(
+    { message: "Method not allowed. Use PATCH to update status." },
+    { status: 405 }
+  );
+}
+
+// Handle POST (not allowed for this endpoint)
+export async function POST(request) {
+  return NextResponse.json(
+    { message: "Method not allowed" },
+    { status: 405 }
+  );
+}
+
+// Handle PUT (not allowed for this endpoint)
+export async function PUT(request) {
+  return NextResponse.json(
+    { message: "Method not allowed" },
+    { status: 405 }
+  );
+}
+
+// Handle PATCH - Update submission status
 export async function PATCH(request, { params }) {
   try {
+    console.log("PATCH request received for status update");
+    
     await initDB();
 
     const { id } = params;
     const body = await request.json();
     const { status } = body;
+
+    console.log("Updating submission:", id, "to status:", status);
 
     // Validation
     if (
@@ -51,6 +92,8 @@ export async function PATCH(request, { params }) {
     // Update status
     const oldStatus = submission.status;
     await submission.update({ status });
+
+    console.log("Status updated successfully:", oldStatus, "->", status);
 
     // Send notifications
     const notificationPromises = [];
@@ -98,6 +141,8 @@ export async function PATCH(request, { params }) {
     // Wait for all notification logs to be created
     await Promise.all(notificationPromises);
 
+    console.log("All notifications processed successfully");
+
     return NextResponse.json({
       message: "Status berhasil diupdate",
       old_status: oldStatus,
@@ -108,8 +153,19 @@ export async function PATCH(request, { params }) {
     console.error("Error updating submission status:", error);
 
     return NextResponse.json(
-      { message: "Terjadi kesalahan internal server" },
+      { 
+        message: "Terjadi kesalahan internal server",
+        error: error.message 
+      },
       { status: 500 }
     );
   }
+}
+
+// Handle DELETE (not allowed for this endpoint)
+export async function DELETE(request) {
+  return NextResponse.json(
+    { message: "Method not allowed" },
+    { status: 405 }
+  );
 }
