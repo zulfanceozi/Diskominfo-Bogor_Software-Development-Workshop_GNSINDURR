@@ -13,8 +13,7 @@
     "test-email": "node scripts/test-email.js",
     "verify-resend": "node scripts/verify-api-key.js",
     "check-submissions": "node scripts/check-submissions.js",
-    "check-notifications": "node scripts/check-notifications.js",
-    "test-status-email": "node scripts/test-status-email.js"
+    "check-notifications": "node scripts/check-notifications.js"
   },
   "dependencies": {
     "antd": "^5.12.8",

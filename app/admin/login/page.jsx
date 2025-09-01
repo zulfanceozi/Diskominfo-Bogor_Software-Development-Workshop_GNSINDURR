@@ -32,9 +32,18 @@ export default function AdminLogin() {
       return;
     }
 
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
     setIsSubmitting(true);
+    setErrors({}); // Clear previous errors
 
     try {
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Simple authentication for workshop - in production use proper auth
       if (formData.username === "admin" && formData.password === "admin123") {
         // Set session (in production use proper session management)
@@ -50,11 +59,12 @@ export default function AdminLogin() {
         }, 1000);
       } else {
         setErrors({ submit: "Username atau password salah" });
+        setIsSubmitting(false); // Reset loading state on error
       }
     } catch (error) {
+      console.error("Login error:", error);
       setErrors({ submit: "Terjadi kesalahan" });
-    } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Reset loading state on error
     }
   };
 
@@ -63,24 +73,15 @@ export default function AdminLogin() {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {isSubmitting ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </span>
-            ) : (
-              "Admin Login"
-            )}
+            Admin Login
           </h1>
           <p className="text-gray-600">
-            {isSubmitting ? "Sedang memproses login..." : "Masuk ke panel administrasi"}
+            Masuk ke panel administrasi
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className={`space-y-6 relative ${isSubmitting ? 'opacity-75' : ''}`}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
           <div>
             <label
               htmlFor="username"
@@ -94,12 +95,7 @@ export default function AdminLogin() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              disabled={isSubmitting}
-              className={`w-full px-3 py-2 border rounded-lg text-black transition duration-200 ${
-                isSubmitting
-                  ? 'border-gray-200 bg-gray-100 cursor-not-allowed text-gray-500'
-                  : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-              }`}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black transition duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Masukkan username"
             />
           </div>
@@ -117,12 +113,7 @@ export default function AdminLogin() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              disabled={isSubmitting}
-              className={`w-full px-3 py-2 border rounded-lg text-black transition duration-200 ${
-                isSubmitting
-                  ? 'border-gray-200 bg-gray-100 cursor-not-allowed text-gray-500'
-                  : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-              }`}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black transition duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Masukkan password"
             />
           </div>

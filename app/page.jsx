@@ -60,6 +60,34 @@ export default function Home() {
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>© 2024 Layanan Publik PWA</p>
           <p className="mt-1">Workshop-Friendly System</p>
+          
+          {/* Debug: Clear Cache Button */}
+          <button
+            onClick={() => {
+              if (confirm('Clear cache dan reload halaman?')) {
+                // Clear caches
+                if ('caches' in window) {
+                  caches.keys().then(cacheNames => {
+                    return Promise.all(
+                      cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                  }).then(() => {
+                    // Unregister service worker
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(registration => registration.unregister());
+                      });
+                    }
+                    // Reload page
+                    window.location.reload();
+                  });
+                }
+              }
+            }}
+            className="mt-4 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg transition duration-200"
+          >
+            🧹 Clear Cache (Debug)
+          </button>
         </div>
       </div>
     </div>

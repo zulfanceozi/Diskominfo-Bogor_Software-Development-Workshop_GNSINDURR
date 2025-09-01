@@ -37,6 +37,19 @@ export default function RootLayout({ children }) {
                   navigator.serviceWorker.register('/service-worker.js')
                     .then(function(registration) {
                       console.log('SW registered: ', registration);
+                      
+                      // Check for updates
+                      registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New service worker available
+                            if (confirm('Ada update baru tersedia. Reload halaman?')) {
+                              window.location.reload();
+                            }
+                          }
+                        });
+                      });
                     })
                     .catch(function(registrationError) {
                       console.log('SW registration failed: ', registrationError);
