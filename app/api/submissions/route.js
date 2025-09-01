@@ -16,6 +16,7 @@ const initDB = async () => {
 
 // Handle CORS preflight
 export async function OPTIONS() {
+  console.log("🔍 OPTIONS request received at /api/submissions");
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -28,6 +29,10 @@ export async function OPTIONS() {
 
 // Handle POST - Create new submission
 export async function POST(request) {
+  console.log("🔍 POST request received at /api/submissions");
+  console.log("🔍 Request method:", request.method);
+  console.log("🔍 Request URL:", request.url);
+
   try {
     await initDB();
 
@@ -128,6 +133,7 @@ export async function POST(request) {
 
 // Handle GET - List submissions (if needed)
 export async function GET() {
+  console.log("🔍 GET request received at /api/submissions");
   return NextResponse.json(
     {
       message: "Method GET not allowed. Use POST to create submission.",
@@ -139,6 +145,7 @@ export async function GET() {
 
 // Handle PUT - Not allowed
 export async function PUT() {
+  console.log("🔍 PUT request received at /api/submissions");
   return NextResponse.json(
     {
       message: "Method PUT not allowed. Use POST to create submission.",
@@ -150,6 +157,7 @@ export async function PUT() {
 
 // Handle PATCH - Not allowed
 export async function PATCH() {
+  console.log("🔍 PATCH request received at /api/submissions");
   return NextResponse.json(
     {
       message: "Method PATCH not allowed. Use POST to create submission.",
@@ -161,6 +169,7 @@ export async function PATCH() {
 
 // Handle DELETE - Not allowed
 export async function DELETE() {
+  console.log("🔍 DELETE request received at /api/submissions");
   return NextResponse.json(
     {
       message: "Method DELETE not allowed. Use POST to create submission.",

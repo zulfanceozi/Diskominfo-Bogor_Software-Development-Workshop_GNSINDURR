@@ -18,6 +18,7 @@ const initDB = async () => {
 
 // Handle CORS preflight
 export async function OPTIONS() {
+  console.log("🔍 OPTIONS request received for status update");
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -30,6 +31,11 @@ export async function OPTIONS() {
 
 // Handle PATCH - Update submission status
 export async function PATCH(request, { params }) {
+  console.log("🔍 PATCH request received for status update");
+  console.log("🔍 Request method:", request.method);
+  console.log("🔍 Request URL:", request.url);
+  console.log("🔍 Params:", params);
+
   try {
     await initDB();
 
@@ -145,6 +151,7 @@ export async function PATCH(request, { params }) {
 
 // Handle GET - Not allowed
 export async function GET() {
+  console.log("🔍 GET request received for status update");
   return NextResponse.json(
     {
       message: "Method GET not allowed. Use PATCH to update status.",
@@ -156,6 +163,7 @@ export async function GET() {
 
 // Handle POST - Not allowed
 export async function POST() {
+  console.log("🔍 POST request received for status update");
   return NextResponse.json(
     {
       message: "Method POST not allowed. Use PATCH to update status.",
@@ -167,6 +175,7 @@ export async function POST() {
 
 // Handle PUT - Not allowed
 export async function PUT() {
+  console.log("🔍 PUT request received for status update");
   return NextResponse.json(
     {
       message: "Method PUT not allowed. Use PATCH to update status.",
@@ -178,6 +187,7 @@ export async function PUT() {
 
 // Handle DELETE - Not allowed
 export async function DELETE() {
+  console.log("🔍 DELETE request received for status update");
   return NextResponse.json(
     {
       message: "Method DELETE not allowed. Use PATCH to update status.",

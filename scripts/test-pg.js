@@ -1,53 +1,40 @@
-const { Sequelize } = require('sequelize');
+/**
+ * Test script to verify pg package loading
+ * Run this to check if PostgreSQL packages are available
+ */
 
-async function testPG() {
-  console.log('🧪 Testing PostgreSQL connection...\n');
-  
-  try {
-    // Test 1: Check if pg package is available
-    console.log('1️⃣ Checking pg package...');
-    const pg = require('pg');
-    console.log('✅ pg package loaded successfully');
-    console.log('Version:', pg.version);
-    console.log('');
-    
-    // Test 2: Test Sequelize with pg
-    console.log('2️⃣ Testing Sequelize with pg...');
-    const testSequelize = new Sequelize(process.env.DATABASE_URL, {
-      dialect: 'postgres',
-      logging: false,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      },
-    });
-    
-    console.log('✅ Sequelize instance created');
-    
-    // Test 3: Test connection
-    console.log('3️⃣ Testing database connection...');
-    await testSequelize.authenticate();
-    console.log('✅ Database connection successful');
-    
-    // Test 4: Test query
-    console.log('4️⃣ Testing simple query...');
-    const result = await testSequelize.query('SELECT NOW() as current_time');
-    console.log('✅ Query successful:', result[0][0]);
-    
-    await testSequelize.close();
-    console.log('✅ Connection closed');
-    
-  } catch (error) {
-    console.log('❌ Error:', error.message);
-    console.log('Stack:', error.stack);
-  }
-  
-  console.log('\n🏁 PG test completed!');
+console.log("🧪 Testing PostgreSQL package availability...\n");
+
+try {
+  // Test direct require
+  console.log("1. Testing direct require...");
+  const pg = require("pg");
+  console.log("✅ pg package loaded successfully");
+  console.log("   Version:", pg.version || "Unknown");
+  console.log("   Client:", typeof pg.Client);
+  console.log("   Pool:", typeof pg.Pool);
+} catch (error) {
+  console.log("❌ Direct require failed:", error.message);
 }
 
-// Load environment variables
-require('dotenv').config();
+try {
+  // Test pg-hstore
+  console.log("\n2. Testing pg-hstore...");
+  const pgHstore = require("pg-hstore");
+  console.log("✅ pg-hstore package loaded successfully");
+} catch (error) {
+  console.log("❌ pg-hstore require failed:", error.message);
+}
 
-testPG().catch(console.error);
+try {
+  // Test our custom wrapper
+  console.log("\n3. Testing custom wrapper...");
+  const pgWrapper = require("../lib/pg-wrapper");
+  console.log("✅ Custom wrapper loaded successfully");
+  console.log("   pg available:", pgWrapper.isAvailable());
+  console.log("   pg-hstore available:", pgWrapper.isHstoreAvailable());
+} catch (error) {
+  console.log("❌ Custom wrapper failed:", error.message);
+}
+
+console.log("\n🏁 Test completed!");
