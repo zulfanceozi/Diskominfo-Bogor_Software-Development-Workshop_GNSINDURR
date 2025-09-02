@@ -146,17 +146,18 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         message.success("Status berhasil diupdate");
-        // Force refresh dengan multiple strategies
+        // Extended loading state untuk memastikan data ter-update
+        // Keep loading for 2.5 seconds to ensure data is fresh
         setTimeout(() => {
           // Force refresh dengan cache bypass yang lebih agresif
           const forceTimestamp = Date.now();
           const forceRandom = Math.random().toString(36).substring(7);
           const forceCacheBuster = Math.random().toString(36).substring(7);
 
-          // Multiple refresh attempts
+          // Multiple refresh attempts dengan delay yang lebih lama
           fetchSubmissions(true);
 
-          // Additional force refresh after 1 second
+          // Additional force refresh after 1.5 seconds
           setTimeout(() => {
             fetch(
               `/api/admin/submissions?force=${forceTimestamp}&r=${forceRandom}&cb=${forceCacheBuster}&_=${Date.now()}`,
@@ -173,8 +174,8 @@ export default function AdminDashboard() {
               // Final refresh
               fetchSubmissions(true);
             });
-          }, 1000);
-        }, 500); // Initial delay 500ms
+          }, 1500); // Increased delay to 1.5 seconds
+        }, 1000); // Increased initial delay to 1 second
       } else {
         const error = await response.json();
         message.error(error.message || "Gagal mengupdate status");
@@ -182,8 +183,10 @@ export default function AdminDashboard() {
     } catch (error) {
       message.error("Terjadi kesalahan jaringan");
     } finally {
-      // Clear loading state for this submission
-      setUpdatingStatus((prev) => ({ ...prev, [submissionId]: false }));
+      // Clear loading state after extended delay to ensure data is fresh
+      setTimeout(() => {
+        setUpdatingStatus((prev) => ({ ...prev, [submissionId]: false }));
+      }, 2500); // Total loading time: 2.5 seconds
     }
   };
 
@@ -382,30 +385,31 @@ export default function AdminDashboard() {
                 )}
               </button>
 
-              <button
-                onClick={() => {
-                  // Force hard refresh
-                  window.location.reload();
-                }}
-                disabled={refreshing || loading}
-                className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center text-sm sm:text-base mr-2"
-                title="Force hard refresh untuk bypass semua cache"
-              >
-                <svg
-                  className="w-4 h-4 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Force Refresh
-              </button>
+              {/* Force Refresh Button - Hidden for production */}
+              {/* <button
+                 onClick={() => {
+                   // Force hard refresh
+                   window.location.reload();
+                 }}
+                 disabled={refreshing || loading}
+                 className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center text-sm sm:text-base mr-2"
+                 title="Force hard refresh untuk bypass semua cache"
+               >
+                 <svg
+                   className="w-4 h-4 mr-1"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24"
+                 >
+                   <path
+                     strokeLinecap="round"
+                     strokeLinejoin="round"
+                     strokeWidth={2}
+                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                   />
+                 </svg>
+                 Force Refresh
+               </button> */}
 
               <button
                 onClick={handleLogout}
@@ -419,28 +423,29 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
-        {/* Debug Info */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center">
-            <svg
-              className="w-5 h-5 text-yellow-600 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-            <div className="text-sm text-yellow-800">
-              <strong>Debug Mode:</strong> Cache bypass aktif. Jika data masih
-              lama, gunakan tombol Refresh atau hard refresh (Ctrl+F5).
-            </div>
-          </div>
-        </div>
+        {/* Debug Info - Hidden for production */}
+        {/* <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+           <div className="flex items-center">
+             <svg
+               className="w-5 h-5 text-yellow-600 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24"
+             >
+               <path
+                 strokeLinecap="round"
+                 strokeLinejoin="round"
+                 strokeWidth={2}
+                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+               />
+             </svg>
+             <div className="text-sm text-yellow-800">
+               <strong>Cache Bypass Active:</strong> Data akan auto-refresh
+               setelah status update. Loading state extended untuk memastikan
+               data fresh.
+             </div>
+           </div>
+         </div> */}
 
         {/* Stats Cards */}
         <Row gutter={[8, 8]} className="mb-6 sm:mb-8">
