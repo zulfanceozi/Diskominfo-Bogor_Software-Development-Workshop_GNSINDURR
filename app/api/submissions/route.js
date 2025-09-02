@@ -127,3 +127,59 @@ export async function GET(request) {
     return errorResponse;
   }
 }
+
+export async function POST(request) {
+  try {
+    await initDB();
+
+    const body = await request.json();
+
+    // Validate required fields
+    const { nama, nik, email, no_wa, jenis_layanan, consent } = body;
+
+    if (!nama || !nik || !email || !no_wa || !jenis_layanan || !consent) {
+      return NextResponse.json(
+        { message: "Semua field harus diisi" },
+        { status: 400 }
+      );
+    }
+
+    // Generate tracking code
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const tracking_code = `WS-${timestamp}-${random}`;
+
+    // Create submission
+    const submission = await Submission.create({
+      tracking_code,
+      nama,
+      nik,
+      jenis_layanan,
+      email,
+      no_wa,
+      consent,
+      status: "PENGAJUAN_BARU",
+    });
+
+    console.log(
+      `[${new Date().toISOString()}] Created submission: ${tracking_code}`
+    );
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Pengajuan berhasil dibuat",
+        tracking_code: submission.tracking_code,
+        submission: submission,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error creating submission:", error);
+
+    return NextResponse.json(
+      { message: "Terjadi kesalahan internal server" },
+      { status: 500 }
+    );
+  }
+}
