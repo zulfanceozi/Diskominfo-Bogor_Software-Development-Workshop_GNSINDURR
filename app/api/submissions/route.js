@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { Submission, initializeDatabase } from "../../../lib/sequelize";
-import {
-  normalizePhoneNumber,
-  isValidIndonesianMobile,
-} from "../../../lib/phone";
+import { Submission, initializeDatabase } from "@/lib/sequelize";
 
 // Initialize database on first request
 let dbInitialized = false;
@@ -14,185 +10,120 @@ const initDB = async () => {
   }
 };
 
-// Handle CORS preflight
-export async function OPTIONS() {
-  console.log("🔍 OPTIONS request received at /api/submissions");
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
-}
-
-// Handle POST - Create new submission
-export async function POST(request) {
-  console.log("🔍 POST request received at /api/submissions");
-  console.log("🔍 Request method:", request.method);
-  console.log("🔍 Request URL:", request.url);
-
+export async function GET(request) {
   try {
     await initDB();
 
-    const body = await request.json();
-    console.log("Request body:", body);
+    // In a real application, you would verify admin authentication here
+    // For workshop purposes, we'll skip authentication
 
-    const { nama, nik, email, no_wa, jenis_layanan, consent } = body;
+    // Parse cache-busting query parameters
+    const url = new URL(request.url);
+    const queryTimestamp = url.searchParams.get("t");
+    const queryRandom = url.searchParams.get("r");
+    const queryForce = url.searchParams.get("force");
+    const queryCacheBuster = url.searchParams.get("cb");
 
-    // Validation
-    const errors = [];
+    // Force fresh data dengan multiple strategies
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(7);
+    const forceRefresh = Date.now();
 
-    if (!nama || !nama.trim()) {
-      errors.push("Nama wajib diisi");
-    }
+    console.log(
+      `[${new Date().toISOString()}] Fetching submissions with force refresh: ${timestamp}-${random}-${forceRefresh}`
+    );
+    console.log(
+      `[${new Date().toISOString()}] Query params: t=${queryTimestamp}, r=${queryRandom}, force=${queryForce}, cb=${queryCacheBuster}`
+    );
 
-    if (!nik || nik.length !== 16 || !/^\d+$/.test(nik)) {
-      errors.push("NIK harus 16 digit angka");
-    }
+    // Force fresh query dengan random order strategy
+    const randomOrder = Math.random() > 0.5 ? "ASC" : "DESC";
+    console.log(
+      `[${new Date().toISOString()}] Using random order: ${randomOrder}`
+    );
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push("Format email tidak valid");
-    }
-
-    if (!no_wa || !no_wa.trim()) {
-      errors.push("Nomor WhatsApp wajib diisi");
-    } else {
-      const normalizedPhone = normalizePhoneNumber(no_wa);
-      if (!isValidIndonesianMobile(normalizedPhone)) {
-        errors.push("Nomor WhatsApp tidak valid");
-      }
-    }
-
-    if (!jenis_layanan || !jenis_layanan.trim()) {
-      errors.push("Jenis layanan wajib dipilih");
-    }
-
-    if (!consent) {
-      errors.push("Anda harus menyetujui pemberian notifikasi");
-    }
-
-    if (errors.length > 0) {
-      console.log("Validation errors:", errors);
-      return NextResponse.json(
-        { message: "Validasi gagal", errors },
-        { status: 400 }
-      );
-    }
-
-    // Generate unique tracking code
-    const trackingCode = generateTrackingCode();
-
-    // Normalize phone number
-    const normalizedPhone = normalizePhoneNumber(no_wa);
-
-    console.log("Creating submission with tracking code:", trackingCode);
-
-    // Create submission
-    const submission = await Submission.create({
-      tracking_code: trackingCode,
-      nama: nama.trim(),
-      nik: nik.trim(),
-      email: email ? email.trim() : null,
-      no_wa: normalizedPhone,
-      jenis_layanan: jenis_layanan.trim(),
-      status: "PENGAJUAN_BARU",
+    const submissions = await Submission.findAll({
+      order: [["created_at", randomOrder]], // Random order untuk force fresh query
+      attributes: [
+        "id",
+        "tracking_code",
+        "nama",
+        "jenis_layanan",
+        "status",
+        "created_at",
+        "updated_at",
+      ],
+      // Force fresh data
+      raw: false,
+      // Add random parameter to force fresh query
+      logging: console.log,
     });
 
-    console.log("Submission created successfully:", submission.id);
-
-    return NextResponse.json(
-      {
-        message: "Pengajuan berhasil dibuat",
-        tracking_code: trackingCode,
-        submission_id: submission.id,
-      },
-      { status: 201 }
+    console.log(
+      `[${new Date().toISOString()}] Found ${submissions.length} submissions`
     );
-  } catch (error) {
-    console.error("Error creating submission:", error);
-
-    // Handle unique constraint violation
-    if (error.name === "SequelizeUniqueConstraintError") {
-      return NextResponse.json(
-        { message: "Kode tracking sudah ada, silakan coba lagi" },
-        { status: 409 }
+    if (submissions.length > 0) {
+      console.log(
+        `[${new Date().toISOString()}] Latest submission: ${
+          submissions[0].tracking_code
+        } (${submissions[0].status})`
       );
     }
 
-    return NextResponse.json(
-      {
-        message: "Terjadi kesalahan internal server",
-        error: error.message,
-      },
+    // Vercel-specific no-cache headers
+    const response = NextResponse.json(submissions);
+
+    // Ultra-aggressive cache control
+    response.headers.set(
+      "Cache-Control",
+      "no-cache, no-store, must-revalidate, private, max-age=0, s-maxage=0, stale-while-revalidate=0"
+    );
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    response.headers.set("Clear-Site-Data", '"cache"');
+
+    // Vercel-specific headers
+    response.headers.set("Surrogate-Control", "no-store");
+    response.headers.set("CDN-Cache-Control", "no-cache");
+    response.headers.set("Vercel-CDN-Cache-Control", "no-cache");
+    response.headers.set("X-Vercel-Cache", "MISS");
+
+    // Force fresh response dengan dynamic values dan query params
+    response.headers.set("Last-Modified", new Date().toUTCString());
+    response.headers.set(
+      "ETag",
+      `"${timestamp}-${random}-${forceRefresh}-${queryTimestamp}-${queryRandom}"`
+    );
+    response.headers.set("X-Response-Time", `${Date.now()}`);
+    response.headers.set(
+      "X-Cache-Buster",
+      `${timestamp}-${random}-${queryCacheBuster}`
+    );
+    response.headers.set("X-Force-Refresh", "true");
+    response.headers.set(
+      "X-Query-Params",
+      `${queryTimestamp}-${queryRandom}-${queryForce}`
+    );
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching submissions:", error);
+
+    const errorResponse = NextResponse.json(
+      { message: "Terjadi kesalahan internal server" },
       { status: 500 }
     );
+
+    // Same headers for errors
+    errorResponse.headers.set(
+      "Cache-Control",
+      "no-cache, no-store, must-revalidate, private"
+    );
+    errorResponse.headers.set("Pragma", "no-cache");
+    errorResponse.headers.set("Expires", "0");
+    errorResponse.headers.set("Surrogate-Control", "no-store");
+    errorResponse.headers.set("CDN-Cache-Control", "no-cache");
+
+    return errorResponse;
   }
-}
-
-// Handle GET - List submissions (if needed)
-export async function GET() {
-  console.log("🔍 GET request received at /api/submissions");
-  return NextResponse.json(
-    {
-      message: "Method GET not allowed. Use POST to create submission.",
-      allowed_methods: ["POST", "OPTIONS"],
-    },
-    { status: 405 }
-  );
-}
-
-// Handle PUT - Not allowed
-export async function PUT() {
-  console.log("🔍 PUT request received at /api/submissions");
-  return NextResponse.json(
-    {
-      message: "Method PUT not allowed. Use POST to create submission.",
-      allowed_methods: ["POST", "OPTIONS"],
-    },
-    { status: 405 }
-  );
-}
-
-// Handle PATCH - Not allowed
-export async function PATCH() {
-  console.log("🔍 PATCH request received at /api/submissions");
-  return NextResponse.json(
-    {
-      message: "Method PATCH not allowed. Use POST to create submission.",
-      allowed_methods: ["POST", "OPTIONS"],
-    },
-    { status: 405 }
-  );
-}
-
-// Handle DELETE - Not allowed
-export async function DELETE() {
-  console.log("🔍 DELETE request received at /api/submissions");
-  return NextResponse.json(
-    {
-      message: "Method DELETE not allowed. Use POST to create submission.",
-      allowed_methods: ["POST", "OPTIONS"],
-    },
-    { status: 405 }
-  );
-}
-
-/**
- * Generate unique tracking code
- * Format: LP-YYYYMMDD-XXXXX (e.g., LP-20241201-12345)
- */
-function generateTrackingCode() {
-  const date = new Date();
-  const dateStr =
-    date.getFullYear().toString() +
-    (date.getMonth() + 1).toString().padStart(2, "0") +
-    date.getDate().toString().padStart(2, "0");
-
-  const randomNum = Math.floor(Math.random() * 100000)
-    .toString()
-    .padStart(5, "0");
-
-  return `LP-${dateStr}-${randomNum}`;
 }
