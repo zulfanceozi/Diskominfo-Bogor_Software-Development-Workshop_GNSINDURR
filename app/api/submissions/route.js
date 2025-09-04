@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Submission, initializeDatabase } from "@/lib/sequelize";
+import { normalizePhoneNumber } from "@/lib/phone";
 
 // Initialize database on first request
 let dbInitialized = false;
@@ -149,6 +150,9 @@ export async function POST(request) {
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     const tracking_code = `WS-${timestamp}-${random}`;
 
+    // Normalize phone number to +62 format
+    const normalizedPhone = normalizePhoneNumber(no_wa);
+
     // Create submission
     const submission = await Submission.create({
       tracking_code,
@@ -156,7 +160,7 @@ export async function POST(request) {
       nik,
       jenis_layanan,
       email,
-      no_wa,
+      no_wa: normalizedPhone,
       consent,
       status: "PENGAJUAN_BARU",
     });

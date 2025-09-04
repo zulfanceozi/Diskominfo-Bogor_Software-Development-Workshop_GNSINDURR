@@ -3,6 +3,30 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Phone number formatting function
+const formatPhoneNumber = (phone) => {
+  if (!phone) return "";
+
+  // Remove all non-digit characters
+  let cleaned = phone.replace(/\D/g, "");
+
+  // Remove leading zeros
+  cleaned = cleaned.replace(/^0+/, "");
+
+  // If it starts with 62, it's already in international format
+  if (cleaned.startsWith("62")) {
+    return `+${cleaned}`;
+  }
+
+  // For Indonesian mobile numbers, add 62
+  if (cleaned.length >= 8 && cleaned.length <= 13) {
+    return `+62${cleaned}`;
+  }
+
+  // Default: assume it's a mobile number and add 62
+  return `+62${cleaned}`;
+};
+
 export default function NewSubmission() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -71,12 +95,18 @@ export default function NewSubmission() {
     setIsSubmitting(true);
 
     try {
+      // Format phone number to +62 format before sending
+      const formattedData = {
+        ...formData,
+        no_wa: formatPhoneNumber(formData.no_wa),
+      };
+
       const response = await fetch("/api/submissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formattedData),
       });
 
       const result = await response.json();
@@ -193,7 +223,7 @@ export default function NewSubmission() {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black ${
               errors.no_wa ? "border-red-500" : "border-gray-300"
             }`}
-            placeholder="08xxxxxxxxxx"
+            placeholder="08xxxxxxxxxx (akan diformat ke +62...)"
           />
           {errors.no_wa && (
             <p className="mt-1 text-sm text-red-600">{errors.no_wa}</p>
