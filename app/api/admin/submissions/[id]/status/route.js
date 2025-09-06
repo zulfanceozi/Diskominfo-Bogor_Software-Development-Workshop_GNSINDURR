@@ -4,7 +4,7 @@ import {
   NotificationLog,
   initializeDatabase,
 } from "@/lib/sequelize";
-import { sendStatusUpdateNotification } from "@/lib/notify/twilio";
+import { sendStatusUpdateNotification } from "@/lib/notify/sicuba";
 import { sendStatusUpdateEmail } from "@/lib/notify/email";
 
 // Initialize database on first request

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { Submission, initializeDatabase } from "@/lib/sequelize";
+import { Submission, NotificationLog, initializeDatabase } from "@/lib/sequelize";
 import { normalizePhoneNumber } from "@/lib/phone";
+import { sendInitialSubmissionNotification } from "@/lib/notify/sicuba";
 
 // Initialize database on first request
 let dbInitialized = false;
@@ -168,6 +169,25 @@ export async function POST(request) {
     console.log(
       `[${new Date().toISOString()}] Created submission: ${tracking_code}`
     );
+
+    // Send initial WhatsApp notification
+    try {
+      const waResult = await sendInitialSubmissionNotification(submission);
+      await NotificationLog.create({
+        submission_id: submission.id,
+        channel: "WHATSAPP",
+        send_status: waResult.success ? "SUCCESS" : "FAILED",
+        payload: {
+          to: submission.no_wa,
+          status: "PENGAJUAN_BARU",
+          result: waResult,
+        },
+      });
+      console.log(`[${new Date().toISOString()}] Initial WhatsApp notification sent:`, waResult.success ? "SUCCESS" : "FAILED");
+    } catch (notificationError) {
+      console.error("Error sending initial WhatsApp notification:", notificationError);
+      // Don't fail the submission creation if notification fails
+    }
 
     return NextResponse.json(
       {
