@@ -1,10 +1,10 @@
-# Layanan Publik PWA
+# Layanan Publik Mobile
 
-Sistem Layanan Publik Berbasis Progressive Web App (PWA) dengan fitur pengajuan layanan, tracking status, dan notifikasi WhatsApp/Email.
+Sistem Layanan Publik Mobile Responsive dengan fitur pengajuan layanan, tracking status, dan notifikasi WhatsApp/Email.
 
 ## 🚀 Fitur
 
-- **PWA (Progressive Web App)** - Dapat diinstall di mobile/desktop
+- **Mobile Responsive Design** - Optimized untuk semua device mobile dan desktop
 - **Pengajuan Layanan** - Form pengajuan dengan validasi
 - **Tracking Status** - Cek status dengan kode tracking + NIK
 - **Admin Dashboard** - Kelola pengajuan dengan Ant Design
@@ -181,7 +181,7 @@ Setelah deploy, update `APP_BASE_URL` di Vercel environment variables dengan URL
 
 ```
 ├── app/                    # Next.js App Router
-│   ├── layout.jsx         # Root layout with PWA setup
+│   ├── layout.jsx         # Root layout with mobile responsive setup
 │   ├── page.jsx           # Home page
 │   ├── globals.css        # Global styles with Tailwind
 │   ├── admin/             # Admin dashboard
@@ -215,10 +215,6 @@ Setelah deploy, update `APP_BASE_URL` di Vercel environment variables dengan URL
 │   ├── pg-wrapper.js      # PostgreSQL wrapper
 │   └── vercel-db.js       # Vercel database utilities
 ├── public/                # Static files
-│   ├── manifest.json      # PWA manifest
-│   ├── service-worker.js  # Service worker
-│   ├── icon-192.png       # PWA icon 192x192
-│   └── icon-512.png       # PWA icon 512x512
 ├── scripts/               # Essential scripts only
 │   ├── init-db.js         # Database initialization
 │   ├── test-twilio.js     # Test Twilio functionality
@@ -250,25 +246,21 @@ Setelah deploy, update `APP_BASE_URL` di Vercel environment variables dengan URL
 - **`postcss.config.js`**: PostCSS configuration
 - **`vercel.json`**: Vercel deployment configuration
 
-## 📱 PWA Features
+## 📱 Mobile Responsive Features
 
-### Install PWA
+### Mobile-First Design
 
-1. Buka aplikasi di Chrome/Edge mobile
-2. Tap menu (⋮) → "Add to Home Screen"
-3. PWA akan terinstall seperti aplikasi native
+- Optimized untuk semua ukuran layar mobile
+- Touch-friendly interface dengan button yang mudah diakses
+- Responsive navigation yang adaptif
+- Fast loading untuk koneksi mobile
 
-### Offline Support
+### Cross-Device Compatibility
 
-- Service worker menyimpan cache untuk offline access
-- Form pengajuan dapat diisi offline
-- Data akan sync saat online kembali
-
-### PWA Components
-
-- **Service Worker**: Offline functionality and caching
-- **Manifest**: App-like experience with icons
-- **Icons**: 192x192 and 512x512 for mobile devices
+- Seamless experience di smartphone, tablet, dan desktop
+- Adaptive layout yang menyesuaikan dengan device
+- Touch gestures support untuk mobile devices
+- Optimized typography untuk readability di semua device
 
 ## 🎯 Admin Dashboard Features
 
@@ -286,7 +278,7 @@ Setelah deploy, update `APP_BASE_URL` di Vercel environment variables dengan URL
 - ✅ All pages accessible
 - ✅ API routes functional
 - ✅ Database connected
-- ✅ PWA features enabled
+- ✅ Mobile responsive design working
 - ✅ Email notifications working
 - ✅ WhatsApp notifications working
 
@@ -351,7 +343,7 @@ npm run dev
 - [ ] Environment variables set
 - [ ] Build successful
 - [ ] App accessible via Vercel URL
-- [ ] PWA features working
+- [ ] Mobile responsive design working
 - [ ] Database connection working
 - [ ] Email notifications working
 - [ ] WhatsApp notifications working
