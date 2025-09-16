@@ -18,9 +18,9 @@ async function testSiCubaIntegration() {
     return;
   }
 
-  // Test data - test dengan format +62 dan tanpa +
+  // Test data - test dengan nomor yang diminta user
   const testData = {
-    to: '+6285890567859', // Test dengan format +62 (seperti di database)
+    to: '+6281212526287', // Test dengan nomor yang diminta user
     name: 'Test User',
     campaign_id: process.env.SICUBA_CAMPAIGN_ID,
     customFields: {

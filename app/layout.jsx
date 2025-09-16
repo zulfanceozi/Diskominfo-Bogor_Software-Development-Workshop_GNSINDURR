@@ -4,9 +4,8 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Layanan Publik PWA",
-  description: "Sistem Layanan Publik Berbasis PWA",
-  manifest: "/manifest.json",
+  title: "Layanan Publik",
+  description: "Sistem Layanan Publik Mobile Responsive",
 };
 
 export const viewport = {
@@ -14,75 +13,16 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#0ea5e9",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Layanan Publik" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-        <meta name="msapplication-TileColor" content="#0ea5e9" />
-        <meta name="msapplication-TileImage" content="/icon-192.png" />
-        <meta name="theme-color" content="#0ea5e9" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={inter.className}>
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/service-worker.js', {
-                    scope: '/'
-                  })
-                    .then(function(registration) {
-                      console.log('SW registered successfully: ', registration);
-                      
-                      // Check for updates
-                      registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New service worker available
-                            if (confirm('Ada update baru tersedia. Reload halaman?')) {
-                              window.location.reload();
-                            }
-                          }
-                        });
-                      });
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
-              }
-              
-              // PWA Install Prompt
-              let deferredPrompt;
-              window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('PWA install prompt ready');
-                e.preventDefault();
-                deferredPrompt = e;
-                
-                // Show install button if needed
-                if (window.showInstallPrompt) {
-                  window.showInstallPrompt();
-                }
-              });
-              
-              window.addEventListener('appinstalled', () => {
-                console.log('PWA was installed');
-                deferredPrompt = null;
-              });
-            `,
-          }}
-        />
       </body>
     </html>
   );
