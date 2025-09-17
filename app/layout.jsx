@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Layanan Publik",
+  title: "Layanan Publik Kecamatan Gunung Sindur",
   description: "Sistem Layanan Publik Mobile Responsive",
 };
 
