@@ -174,6 +174,8 @@ async function initDatabase() {
       {
         tableName: "submissions",
         timestamps: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at",
       }
     );
 
@@ -209,6 +211,7 @@ async function initDatabase() {
       {
         tableName: "notification_logs",
         timestamps: true,
+        createdAt: "created_at",
         updatedAt: false, // Only track creation time
       }
     );

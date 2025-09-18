@@ -42,9 +42,21 @@ export default function NewSubmission() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Special handling for phone number - only allow numeric input
+    let processedValue = value;
+    if (name === "no_wa") {
+      // Remove all non-numeric characters except + at the beginning
+      processedValue = value.replace(/[^\d\+]/g, "");
+      // If it starts with +, keep it, otherwise remove +
+      if (!processedValue.startsWith("+")) {
+        processedValue = processedValue.replace(/\+/g, "");
+      }
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : processedValue,
     }));
     // Clear error when user starts typing
     if (errors[name]) {
@@ -55,10 +67,12 @@ export default function NewSubmission() {
   const validateForm = () => {
     const newErrors = {};
 
+    // Nama wajib diisi
     if (!formData.nama.trim()) {
-      newErrors.nama = "Nama wajib diisi";
+      newErrors.nama = "Nama lengkap wajib diisi";
     }
 
+    // NIK validation (keeping existing)
     if (!formData.nik.trim()) {
       newErrors.nik = "NIK wajib diisi";
     } else if (formData.nik.length !== 16) {
@@ -67,12 +81,20 @@ export default function NewSubmission() {
       newErrors.nik = "NIK hanya boleh berisi angka";
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email wajib & valid format
+    if (!formData.email.trim()) {
+      newErrors.email = "Email wajib diisi";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Format email tidak valid";
     }
 
+    // Phone number wajib numeric
     if (!formData.no_wa.trim()) {
       newErrors.no_wa = "Nomor WhatsApp wajib diisi";
+    } else if (!/^[\d\+]+$/.test(formData.no_wa)) {
+      newErrors.no_wa = "Nomor WhatsApp hanya boleh berisi angka";
+    } else if (formData.no_wa.length < 8) {
+      newErrors.no_wa = "Nomor WhatsApp terlalu pendek";
     }
 
     if (!formData.jenis_layanan) {
@@ -188,7 +210,7 @@ export default function NewSubmission() {
             htmlFor="email"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Email (Opsional)
+            Email *
           </label>
           <input
             type="email"
@@ -223,7 +245,7 @@ export default function NewSubmission() {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black ${
               errors.no_wa ? "border-red-500" : "border-gray-300"
             }`}
-            placeholder="08xxxxxxxxxx (akan diformat ke +62...)"
+            placeholder="08xxxxxxxxxx atau +628xxxxxxxxxx"
           />
           {errors.no_wa && (
             <p className="mt-1 text-sm text-red-600">{errors.no_wa}</p>
