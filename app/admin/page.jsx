@@ -25,6 +25,8 @@ export default function AdminDashboard() {
   const [chartData, setChartData] = useState([]);
   const [updatingStatus, setUpdatingStatus] = useState({}); // Track which submission is being updated
   const [refreshing, setRefreshing] = useState(false); // Track refresh loading state
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Track selected rows for bulk operations
+  const [bulkUpdating, setBulkUpdating] = useState(false); // Track bulk update loading state
 
   const COLORS = ["#ffc107", "#1890ff", "#52c41a", "#ff4d4f"];
 
@@ -223,6 +225,56 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
     router.push("/admin/login");
+  };
+
+  const handleBulkStatusUpdate = async (newStatus) => {
+    if (selectedRowKeys.length === 0) {
+      message.warning("Pilih minimal satu pengajuan untuk diupdate");
+      return;
+    }
+
+    setBulkUpdating(true);
+
+    try {
+      const response = await fetch("/api/admin/submissions/bulk-status", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          submissionIds: selectedRowKeys,
+          status: newStatus,
+        }),
+      });
+
+      if (response.ok) {
+        message.success(`${selectedRowKeys.length} pengajuan berhasil diupdate ke status ${getStatusText(newStatus)}`);
+        setSelectedRowKeys([]);
+        // Refresh data
+        fetchSubmissions(true);
+      } else {
+        const error = await response.json();
+        message.error(error.message || "Gagal mengupdate status pengajuan");
+      }
+    } catch (error) {
+      message.error("Terjadi kesalahan jaringan");
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const handleSelectChange = (selectedRowKeys) => {
+    setSelectedRowKeys(selectedRowKeys);
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: handleSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: updatingStatus[record.id] || bulkUpdating,
+    }),
   };
 
   const columns = [
@@ -845,12 +897,46 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Bulk Actions */}
+          {selectedRowKeys.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-blue-800">
+                    {selectedRowKeys.length} pengajuan dipilih
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Select
+                    placeholder="Update status ke..."
+                    style={{ width: 200 }}
+                    disabled={bulkUpdating}
+                    onSelect={handleBulkStatusUpdate}
+                  >
+                    <Option value="PENGAJUAN_BARU">Pengajuan Baru</Option>
+                    <Option value="DIPROSES">Sedang Diproses</Option>
+                    <Option value="SELESAI">Selesai</Option>
+                    <Option value="DITOLAK">Ditolak</Option>
+                  </Select>
+                  <button
+                    onClick={() => setSelectedRowKeys([])}
+                    disabled={bulkUpdating}
+                    className="px-3 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg text-sm"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="relative">
             <Table
               columns={columns}
               dataSource={filteredSubmissions}
               rowKey="id"
               loading={loading}
+              rowSelection={rowSelection}
               scroll={{ x: 800, y: 400 }}
               pagination={{
                 pageSize: 10,
